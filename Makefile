@@ -1,7 +1,5 @@
 # Makefile for starting LocalStack and running a Java project
 
-.PHONY: start-localstack build-java-project run-java-project
-
 MAIN_CLASS = org.example.sqs.App
 
 start-localstack:
