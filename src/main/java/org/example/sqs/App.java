@@ -54,6 +54,7 @@ public class App
 
         System.out.println("Sent message: " + messageBody);
     }
+    
     public static void main( String[] args )
     {
         // Should match the values entered in the localstack configuration step
