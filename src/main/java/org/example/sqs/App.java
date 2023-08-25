@@ -56,6 +56,7 @@ public class App
     }
     public static void main( String[] args )
     {
+        // Should match the values entered in the localstack configuration step
         String awsAccessKeyId = "123";
         String awsSecretAccessKey = "123";
         String localstackSqsEndpoint = "http://localhost:4566/000000000000/sample-queue";

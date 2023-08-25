@@ -1,5 +1,3 @@
-# Makefile for starting LocalStack and running a Java project
-
 MAIN_CLASS = org.example.sqs.App
 
 start-localstack:
