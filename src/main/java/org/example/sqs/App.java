@@ -85,12 +85,11 @@ public class App
     }
     
     public static void remoteConnectionHelloWorld() {
-        // Input Access Key Id and Secret for AWS IAM role provided to evergen: arn:aws:iam::300929546435:role/redx
-        // Alternatively, if the service will use temporary IAM credentials from EC2 instance, then these credentials are not needed.
-        
-        // Set this as true if using explicit IAM credentials, or false if using temporary IAM credentials form the EC2 instance running this service.
+        // Set this as true if using explicit IAM credentials, or false if using temporary IAM credentials from the EC2 instance running this service.
         Boolean explicitIAMCredentialsRequired = true;
         
+        // If using explicit credentials:
+        // Input Access Key Id and Secret for AWS IAM role provided to evergen: arn:aws:iam::300929546435:role/redx
         String awsAccessKeyId = ""; 
         String awsSecretAccessKey = "";
         
