@@ -17,7 +17,6 @@ public class App
         }
         
         // Else, use IAM credentials:
-
         // Create AWS credentials
         BasicAWSCredentials credentials = new BasicAWSCredentials(awsAccessKeyId, awsSecretAccessKey);
 
@@ -26,10 +25,7 @@ public class App
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(localstackSqsEndpoint, "ap-southeast-2"))
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .build();
-
         return sqs;
-        
-        
     }
 
     public static void readMessagesFromQueue(AmazonSQS sqs, String queueUrl, String queueName) {
@@ -106,9 +102,10 @@ public class App
         String queueCommands = sqsCommandsClient.getQueueUrl(getQueueUrlRequest).getQueueUrl();
         
         // Telemetry should be sent through as a serialised object in the prescribed format in the documentation. 
-        // But this can be used to test connectivity.
+        // But this can be used to test connectivity. Reception of this can be confirmed via Slack with Evergen.
         writeMessageToQueue(sqsTelemetryClient, queueTelemetry, telemetryQueue, "Hello World!");
 
+        // Test the reception of a sample command.
         readMessagesFromQueue(sqsTelemetryClient, queueCommands, commandsQueue);
 
         System.exit(0);
@@ -118,6 +115,7 @@ public class App
     {
         localDemo();
 
+        // Uncomment to run demo with Evergen's development environment SQS queues.
         // remoteConnectionHelloWorld();
     }
 }
