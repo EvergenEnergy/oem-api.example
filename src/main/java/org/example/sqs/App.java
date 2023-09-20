@@ -86,13 +86,13 @@ public class App
         Boolean explicitIAMCredentialsRequired = false;
         
         // If using explicit credentials:
-        // Input Access Key Id and Secret for AWS IAM role provided to evergen: arn:aws:iam::300929546435:role/redx
+        // Input Access Key Id and Secret for AWS IAM role provided to evergen: arn:aws:iam::000000000000:role/role_name
         String awsAccessKeyId = ""; 
         String awsSecretAccessKey = "";
         
         String queueUrlEvergen = "https://sqs.ap-southeast-2.amazonaws.com/406871981087/";
-        String telemetryQueue = "telemetry-redx-dev";
-        String commandsQueue = "commands-redx-dev";
+        String telemetryQueue = "telemetry-OEM_X-dev";
+        String commandsQueue = "commands-OEM_X-dev";
 
         AmazonSQS sqsTelemetryClient = createSQSClient(awsAccessKeyId, awsSecretAccessKey, queueUrlEvergen, explicitIAMCredentialsRequired);
         AmazonSQS sqsCommandsClient = createSQSClient(awsAccessKeyId, awsSecretAccessKey, queueUrlEvergen, explicitIAMCredentialsRequired);
