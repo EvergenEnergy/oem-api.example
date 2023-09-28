@@ -40,5 +40,20 @@ make demo
 This will:
 
 - Run the localstack SQS server in Docker
+- Package the local java application into the target folder
 - Run the basic Java application, performing 1 write and read with an SQS client
 - Remove the localstack SQS server
+
+## Packaging and running the packaged Demo
+
+To package the demo run:
+
+```sh
+make package
+```
+
+Then to run this packaged jar file run:
+
+```sh
+make run-packaged-jar
+```
