@@ -5,6 +5,7 @@ start-localstack:
 	aws sqs create-queue --queue-name example-queue --endpoint-url http://localhost:4566 --profile localstack
 
 run-java-project:
+	mvn package
 	mvn exec:java -Dexec.mainClass=$(MAIN_CLASS) 
 
 demo: start-localstack run-java-project clean
