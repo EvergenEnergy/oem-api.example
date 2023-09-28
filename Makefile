@@ -4,11 +4,7 @@ start-localstack:
 	docker compose -f docker-compose.yml up -d
 	aws sqs create-queue --queue-name example-queue --endpoint-url http://localhost:4566 --profile localstack
 
-run-java-project:
-	mvn package
-	mvn exec:java -Dexec.mainClass=$(MAIN_CLASS) 
-
-demo: start-localstack run-java-project clean
+demo: start-localstack package run-packaged-jar clean
 
 clean:
 	docker compose -f docker-compose.yml down -v
