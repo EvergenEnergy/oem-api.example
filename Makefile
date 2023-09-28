@@ -13,3 +13,9 @@ demo: start-localstack run-java-project clean
 clean:
 	docker compose -f docker-compose.yml down -v
 	docker compose -f docker-compose.yml rm -s -f -v
+
+package:
+	mvn clean package
+
+run-packaged-jar:
+	java -jar target/java-sqs-client-demo-1.0.jar

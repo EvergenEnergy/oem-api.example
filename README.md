@@ -42,3 +42,17 @@ This will:
 - Run the localstack SQS server in Docker
 - Run the basic Java application, performing 1 write and read with an SQS client
 - Remove the localstack SQS server
+
+## Packaging and run the Demo
+
+To package the demo run:
+
+```sh
+make package
+```
+
+Then to run this packaged jar file run:
+
+```sh
+make run-packaged-jar
+```
