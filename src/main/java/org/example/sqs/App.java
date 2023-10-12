@@ -1,122 +1,48 @@
 package org.example.sqs;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.*;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.sqs.model.SendMessageResult;
+
+import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
+import com.amazonaws.services.sqs.model.GetQueueAttributesResult;
+import com.amazonaws.services.sqs.model.QueueAttributeName;
 
 public class App 
 {
+    public static void main(String[] args) {
+        // Create an SQS client with the default credentials provider chain
+        AmazonSQS sqsTelemetryClient = AmazonSQSClientBuilder.standard()
+            .withRegion("ap-southeast-2") // Replace with your desired AWS region
+            .build();
 
-    public static AmazonSQS createSQSClient(String awsAccessKeyId, String awsSecretAccessKey, String localstackSqsEndpoint, Boolean explicitCredentials) {
-        if(explicitCredentials == false) {
-            return AmazonSQSClientBuilder.defaultClient();
-        }
+        // Specify the URL of the target SQS queue
+        String queueUrl = "https://sqs.ap-southeast-2.amazonaws.com/406871981087/telemetry-mockVendor-dev";
         
-        // Else, use IAM credentials:
-        // Create AWS credentials
-        BasicAWSCredentials credentials = new BasicAWSCredentials(awsAccessKeyId, awsSecretAccessKey);
+        // Retrieve and print the queue attributes
+        GetQueueAttributesRequest getQueueAttributesRequest = new GetQueueAttributesRequest()
+            .withQueueUrl(queueUrl)
+            .withAttributeNames(QueueAttributeName.All.toString());
 
-        // Create an SQS client
-        AmazonSQS sqs = AmazonSQSClient.builder()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(localstackSqsEndpoint, "ap-southeast-2"))
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .build();
-        return sqs;
-    }
+        GetQueueAttributesResult queueAttributesResult = sqsTelemetryClient.getQueueAttributes(getQueueAttributesRequest);
 
-    public static void readMessagesFromQueue(AmazonSQS sqs, String queueUrl, String queueName) {
-        while (true) {
-            // Receive messages from the local SQS queue (up to 10 messages at a time)
-            ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl)
-                    .withAttributeNames("All")
-                    .withMaxNumberOfMessages(10)
-                    .withMessageAttributeNames("All")
-                    .withWaitTimeSeconds(1); // Adjust the wait time as needed
+        // Print the queue attributes
+        System.out.println("Approximate Number of Messages: " + queueAttributesResult.getAttributes().get(QueueAttributeName.ApproximateNumberOfMessages.toString()));
+        System.out.println("Visibility Timeout: " + queueAttributesResult.getAttributes().get(QueueAttributeName.VisibilityTimeout.toString()));
 
-            ReceiveMessageResult receiveMessageResult = sqs.receiveMessage(receiveMessageRequest);
 
-            for (Message message : receiveMessageResult.getMessages()) {
-                // Handle each message as needed
-                System.out.println("Received message: " + message.getBody());
+        // Create a message
+        String messageBody = "Hello, Test 2";
+        SendMessageRequest sendMessageRequest = new SendMessageRequest()
+            .withQueueUrl(queueUrl)
+            .withMessageBody(messageBody);
 
-                // Delete the message from the queue
-                sqs.deleteMessage(queueUrl, message.getReceiptHandle());
-                
-                // Returning now as only one example message written to sqs queue
-                return;
-            }
-        }
-    }
+        // Send the message to the SQS queue
+        SendMessageResult sendMessageResult = sqsTelemetryClient.sendMessage(sendMessageRequest);
 
-    public static void writeMessageToQueue(AmazonSQS sqs, String queueUrl, String queueName, String messageBody) {
-        // Send a message to the queue
-        SendMessageRequest sendMessageRequest = new SendMessageRequest(queueUrl, messageBody);
-        sqs.sendMessage(sendMessageRequest);
-
-        System.out.println("Sent message: " + messageBody);
-    }
-    
-    public static void localDemo() {
-         // Should match the values entered in the localstack configuration step
-         String awsAccessKeyId = "123";
-         String awsSecretAccessKey = "123";
-         String localstackSqsEndpoint = "http://localhost:4566/000000000000/";
-         String queueName = "example-queue";
- 
-         AmazonSQS sqs = createSQSClient(awsAccessKeyId, awsSecretAccessKey, localstackSqsEndpoint, true);
- 
-         // Get the URL of the local SQS queue
-         GetQueueUrlRequest getQueueUrlRequest = new GetQueueUrlRequest(queueName);
-         String queueUrl = sqs.getQueueUrl(getQueueUrlRequest).getQueueUrl();
-         
-         writeMessageToQueue(sqs, queueUrl, queueName, "Test message written to SQS");
- 
-         readMessagesFromQueue(sqs, queueUrl, queueName);
- 
-         System.exit(0);
-    }
-    
-    public static void remoteConnectionHelloWorld() {
-        // Set it to false if using temporary IAM credentials from the EC2 instance running this service. This is the recommended approach.
-        // Or set this as true if using explicit IAM credentials.
-        Boolean explicitIAMCredentialsRequired = false;
-        
-        // If using explicit credentials:
-        // Input Access Key Id and Secret for AWS IAM role provided to evergen: arn:aws:iam::000000000000:role/role_name
-        String awsAccessKeyId = ""; 
-        String awsSecretAccessKey = "";
-        
-        String queueUrlEvergen = "https://sqs.ap-southeast-2.amazonaws.com/406871981087/";
-        String telemetryQueue = "telemetry-OEM_X-dev";
-        String commandsQueue = "commands-OEM_X-dev";
-
-        AmazonSQS sqsTelemetryClient = createSQSClient(awsAccessKeyId, awsSecretAccessKey, queueUrlEvergen, explicitIAMCredentialsRequired);
-        AmazonSQS sqsCommandsClient = createSQSClient(awsAccessKeyId, awsSecretAccessKey, queueUrlEvergen, explicitIAMCredentialsRequired);
-
-        // Get the URL of the local SQS queue
-        GetQueueUrlRequest getQueueUrlRequest = new GetQueueUrlRequest(telemetryQueue);
-        String queueTelemetry = sqsTelemetryClient.getQueueUrl(getQueueUrlRequest).getQueueUrl();
-        String queueCommands = sqsCommandsClient.getQueueUrl(getQueueUrlRequest).getQueueUrl();
-        
-        // Telemetry should be sent through as a serialised object in the prescribed format in the documentation. 
-        // But this can be used to test connectivity. Reception of this can be confirmed via Slack with Evergen.
-        writeMessageToQueue(sqsTelemetryClient, queueTelemetry, telemetryQueue, "Hello World!");
-
-        // Test the reception of a sample command.
-        readMessagesFromQueue(sqsTelemetryClient, queueCommands, commandsQueue);
-
+        // Print the message ID to confirm that the message was sent
+        System.out.println("Message sent with ID: " + sendMessageResult.getMessageId());
         System.exit(0);
-    }
-
-    public static void main( String[] args )
-    {
-        localDemo();
-
-        // Uncomment to run demo with Evergen's development environment SQS queues.
-        // remoteConnectionHelloWorld();
     }
 }
