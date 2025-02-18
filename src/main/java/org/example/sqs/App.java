@@ -54,7 +54,7 @@ public class App
                     .withAttributeNames("All")
                     .withMaxNumberOfMessages(10)
                     .withMessageAttributeNames("All")
-                    .withWaitTimeSeconds(1); // Adjust the wait time as needed
+                    .withWaitTimeSeconds(10); // Adjust the wait time as needed
 
             ReceiveMessageResult receiveMessageResult = sqs.receiveMessage(receiveMessageRequest);
 
