@@ -40,14 +40,5 @@ make demo
 This will:
 
 - Run the localstack SQS server in Docker
-- Install necessary packages 
+- Install necessary packages
 - Run either the local or remote demo depending on which function is called in the main function of the App
-
-
-## Running the Demo
-
-To install the necessary packages and run the Demo
-
-```sh
-make package-and-run
-```
