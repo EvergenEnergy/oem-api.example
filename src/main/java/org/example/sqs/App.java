@@ -3,20 +3,21 @@ package org.example.sqs;
 import org.example.sqs.models.*;
 import java.util.ArrayList;
 import java.net.URI;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.amazonaws.services.sqs.AmazonSQS;
-import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
-import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.amazonaws.services.sqs.model.SendMessageResult;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.core.builder.CloudEventBuilder;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.sqs.AmazonSQSClient;
-import com.amazonaws.services.sqs.model.*;
 
 
 public class App 
@@ -31,59 +32,79 @@ public class App
         String messageBody = "Test message";
 
         // Create AWS credentials
-        BasicAWSCredentials credentials = new BasicAWSCredentials(awsAccessKeyId, awsSecretAccessKey);
+        AwsBasicCredentials credentials = AwsBasicCredentials.create(awsAccessKeyId, awsSecretAccessKey);
 
-        // Create an SQS client
-        AmazonSQS sqs = AmazonSQSClient.builder()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(localstackSqsQueueUrl, "ap-southeast-2"))
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .build();
+        // Create an SQS client with try-with-resources for automatic resource management
+        try (SqsClient sqs = SqsClient.builder()
+                .endpointOverride(URI.create("http://localhost:4566"))
+                .region(Region.AP_SOUTHEAST_2)
+                .credentialsProvider(StaticCredentialsProvider.create(credentials))
+                .build()) {
 
-        SendMessageRequest sendMessageRequest = new SendMessageRequest(localstackSqsQueueUrl, messageBody);
-        sqs.sendMessage(sendMessageRequest);
+            SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                    .queueUrl(localstackSqsQueueUrl)
+                    .messageBody(messageBody)
+                    .build();
+            
+            sqs.sendMessage(sendMessageRequest);
+            System.out.println("Sent message: " + messageBody);
 
-        System.out.println("Sent message: " + messageBody);
+            ReceiveMessageRequest receiveMessageRequest = ReceiveMessageRequest.builder()
+                    .queueUrl(localstackSqsQueueUrl)
+                    .maxNumberOfMessages(10)
+                    .messageAttributeNames("All")
+                    .waitTimeSeconds(1)
+                    .build();
 
-        ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(localstackSqsQueueUrl)
-                    .withAttributeNames("All")
-                    .withMaxNumberOfMessages(10)
-                    .withMessageAttributeNames("All")
-                    .withWaitTimeSeconds(10); // Adjust the wait time as needed
+            ReceiveMessageResponse receiveMessageResponse = sqs.receiveMessage(receiveMessageRequest);
 
-            ReceiveMessageResult receiveMessageResult = sqs.receiveMessage(receiveMessageRequest);
-
-            for (Message message : receiveMessageResult.getMessages()) {
+            for (Message message : receiveMessageResponse.messages()) {
                 // Handle each message as needed
-                System.out.println("Received message: " + message.getBody());
+                System.out.println("Received message: " + message.body());
 
                 // Delete the message from the queue
-                sqs.deleteMessage(localstackSqsQueueUrl, message.getReceiptHandle());
+                DeleteMessageRequest deleteRequest = DeleteMessageRequest.builder()
+                        .queueUrl(localstackSqsQueueUrl)
+                        .receiptHandle(message.receiptHandle())
+                        .build();
+                sqs.deleteMessage(deleteRequest);
             }
+
+        } catch (Exception e) {
+            System.err.println("Error during SQS operations: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         System.exit(0);
    }
    
    public static void remoteConnection() {
        // Create an SQS client with the default credentials provider chain
-       AmazonSQS sqsTelemetryClient = AmazonSQSClientBuilder.standard()
-       .withRegion("ap-southeast-2") // Replace with your desired AWS region
-       .build();
+       try (SqsClient sqsTelemetryClient = SqsClient.builder()
+               .region(Region.AP_SOUTHEAST_2) // Replace with your desired AWS region
+               .build()) {
 
-        // Specify the URL of the target SQS queue
-        String queueUrl = "https://sqs.ap-southeast-2.amazonaws.com/406871981087/telemetry-mockVendor-dev";
+            // Specify the URL of the target SQS queue
+            String queueUrl = "https://sqs.ap-southeast-2.amazonaws.com/406871981087/telemetry-mockVendor-dev";
 
-        String payload = getExampleCloudEvent();
+            String payload = getExampleCloudEvent();
 
-        // // Create a message
-        SendMessageRequest sendMessageRequest = new SendMessageRequest()
-            .withQueueUrl(queueUrl)
-            .withMessageBody(payload);
+            // Create a message
+            SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
+                .queueUrl(queueUrl)
+                .messageBody(payload)
+                .build();
 
-        // // Send the message to the SQS queue
-        SendMessageResult sendMessageResult = sqsTelemetryClient.sendMessage(sendMessageRequest);
+            // Send the message to the SQS queue
+            SendMessageResponse sendMessageResult = sqsTelemetryClient.sendMessage(sendMessageRequest);
 
-        // Print the message ID to confirm that the message was sent
-        System.out.println("Message sent with ID: " + sendMessageResult.getMessageId());
+            // Print the message ID to confirm that the message was sent
+            System.out.println("Message sent with ID: " + sendMessageResult.messageId());
+
+        } catch (Exception e) {
+            System.err.println("Error during SQS operations: " + e.getMessage());
+            e.printStackTrace();
+        }
 
         System.exit(0);
    }
@@ -121,12 +142,7 @@ public class App
             .resolveFormat("application/cloudevents+json")
             .serialize(event);
 
-        String serialisedCloudEvent = "";
-        try {
-            serialisedCloudEvent = new String(serialized, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        String serialisedCloudEvent = new String(serialized, StandardCharsets.UTF_8);
         System.out.println("CloudEvent: " + serialisedCloudEvent);
         
         return serialisedCloudEvent;
