@@ -2,9 +2,9 @@ MAIN_CLASS = org.example.sqs.App
 
 start-localstack:
 	docker compose -f docker-compose.yml up -d
-	aws sqs create-queue --queue-name example-queue --endpoint-url http://localhost:4566 --profile localstack
+	aws sqs create-queue --queue-name example-queue --endpoint-url http://localhost:4566 --profile localstack | grep QueueUrl
 
-demo: start-localstack package package-and-run clean
+demo: start-localstack package-and-run clean
 
 clean:
 	docker compose -f docker-compose.yml down -v
