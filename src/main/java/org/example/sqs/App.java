@@ -19,9 +19,7 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.core.builder.CloudEventBuilder;
 
-
-public class App 
-{
+public class App {
 
     public static void localDemo() {
         // Should match the values entered in the localstack configuration step
@@ -34,7 +32,8 @@ public class App
         // Create AWS credentials
         AwsBasicCredentials credentials = AwsBasicCredentials.create(awsAccessKeyId, awsSecretAccessKey);
 
-        // Create an SQS client with try-with-resources for automatic resource management
+        // Create an SQS client with try-with-resources for automatic resource
+        // management
         try (SqsClient sqs = SqsClient.builder()
                 .endpointOverride(URI.create("http://localhost:4566"))
                 .region(Region.AP_SOUTHEAST_2)
@@ -45,7 +44,7 @@ public class App
                     .queueUrl(localstackSqsQueueUrl)
                     .messageBody(messageBody)
                     .build();
-            
+
             sqs.sendMessage(sendMessageRequest);
             System.out.println("Sent message: " + messageBody);
 
@@ -76,13 +75,13 @@ public class App
         }
 
         System.exit(0);
-   }
-   
-   public static void remoteConnection() {
-       // Create an SQS client with the default credentials provider chain
-       try (SqsClient sqsTelemetryClient = SqsClient.builder()
-               .region(Region.AP_SOUTHEAST_2) // Replace with your desired AWS region
-               .build()) {
+    }
+
+    public static void remoteConnection() {
+        // Create an SQS client with the default credentials provider chain
+        try (SqsClient sqsTelemetryClient = SqsClient.builder()
+                .region(Region.AP_SOUTHEAST_2) // Replace with your desired AWS region
+                .build()) {
 
             // Specify the URL of the target SQS queue
             String queueUrl = "https://sqs.ap-southeast-2.amazonaws.com/406871981087/telemetry-mockVendor-dev";
@@ -91,9 +90,9 @@ public class App
 
             // Create a message
             SendMessageRequest sendMessageRequest = SendMessageRequest.builder()
-                .queueUrl(queueUrl)
-                .messageBody(payload)
-                .build();
+                    .queueUrl(queueUrl)
+                    .messageBody(payload)
+                    .build();
 
             // Send the message to the SQS queue
             SendMessageResponse sendMessageResult = sqsTelemetryClient.sendMessage(sendMessageRequest);
@@ -107,10 +106,10 @@ public class App
         }
 
         System.exit(0);
-   }
+    }
 
-   public static String getExampleCloudEvent() {
-    TelemetryData telemetryData = new TelemetryData();
+    public static String getExampleCloudEvent() {
+        TelemetryData telemetryData = new TelemetryData();
 
         telemetryData.siteID = "Site123";
         ArrayList<HybridInverterData> newHyrbidInverters = new ArrayList<HybridInverterData>();
@@ -119,8 +118,8 @@ public class App
         HybridInverterData hybridInverter = new HybridInverterData();
         hybridInverter.deviceID = "Device123";
         telemetryData.hybridInverters.add(hybridInverter);
-    
-    String jsonString = "";
+
+        String jsonString = "";
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             jsonString = objectMapper.writeValueAsString(telemetryData);
@@ -136,17 +135,17 @@ public class App
                 .withData(jsonString.getBytes())
                 .build();
 
-        byte[]serialized = EventFormatProvider
-            .getInstance()
-            // .resolveFormat(ContentType.JSON)
-            .resolveFormat("application/cloudevents+json")
-            .serialize(event);
+        byte[] serialized = EventFormatProvider
+                .getInstance()
+                // .resolveFormat(ContentType.JSON)
+                .resolveFormat("application/cloudevents+json")
+                .serialize(event);
 
         String serialisedCloudEvent = new String(serialized, StandardCharsets.UTF_8);
         System.out.println("CloudEvent: " + serialisedCloudEvent);
-        
+
         return serialisedCloudEvent;
-   }
+    }
 
     public static void main(String[] args) {
         localDemo();
