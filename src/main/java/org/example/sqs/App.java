@@ -52,7 +52,7 @@ public class App {
                     .queueUrl(localstackSqsQueueUrl)
                     .maxNumberOfMessages(10)
                     .messageAttributeNames("All")
-                    .waitTimeSeconds(1)
+                    .waitTimeSeconds(10) // Adjust the wait time as
                     .build();
 
             ReceiveMessageResponse receiveMessageResponse = sqs.receiveMessage(receiveMessageRequest);
