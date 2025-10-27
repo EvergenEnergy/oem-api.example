@@ -133,9 +133,9 @@ public class App
    }
 
     public static void main(String[] args) {
-        // localDemo();
+        localDemo();
 
         // Uncomment to run demo with Evergen's development environment SQS queues.
-        remoteConnection();
+        // remoteConnection();
     }
 }
